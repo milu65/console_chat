@@ -2,7 +2,7 @@
 
 Use the OpenAI API to interact with ChatGPT on the console
 
-
+[![demo](demo.png)](./demo.png)
 ### Installation
 
 Clone the repository:   
@@ -30,7 +30,7 @@ Create file config.json in the current directory.
 ### Usage
 Run the program:  
 ```
-python main.py 
+python console_chat.py 
 ```
 The program will print a welcome message, and you can start chatting by entering your message and pressing Enter.  
 To clear the chat history, enter "clear".  

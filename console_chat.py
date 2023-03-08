@@ -23,8 +23,9 @@ def ask(key, msg):
 if __name__ == '__main__':
     print(WELCOME_MSG)
     conversation = []
+    current_path = os.path.dirname(os.path.abspath(__file__))
 
-    with open('config.json', 'r') as f:
+    with open(current_path+'/config.json', 'r') as f:
         config = json.load(f)
         api_key = config['api_key']
 
