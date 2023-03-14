@@ -33,5 +33,6 @@ Run the program:
 python console_chat.py 
 ```
 The program will print a welcome message, and you can start chatting by entering your message and pressing Enter.  
-To clear the chat history, enter "clear".  
-To quit the application, enter "q".
+To clear the chat history, enter "clear". (history saved to file)  
+To quit the application, enter "q". (history saved to file)  
+Multi-line input, enter "m".
