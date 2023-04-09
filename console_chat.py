@@ -30,7 +30,7 @@ def process_stream_response(responses):
                 if content is None:
                     pass
                 else:
-                    print(choice.delta.content, end="")
+                    print(choice.delta.content, end="", flush=True)
     return result
 
 
