@@ -5,31 +5,50 @@ import os
 import json
 from openai import OpenAIError
 
-MODEL = "gpt-3.5-turbo"
-WELCOME_MSG = "[New Conversation] Using OpenAI Chat API(" + MODEL + ")."
+CONFIG = []
+WELCOME_MSG = "[New Conversation] Using OpenAI Chat API."
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONVERSATION_LOG_PATH = CURRENT_DIR + '/conversation_log.json'
 CONFIG_PATH = CURRENT_DIR + '/config.json'
 
 
-def ask(key, msg):
-    openai.api_key = key
+def process_response(response):
+    result = ''
+    for choice in response.choices:
+        result += choice.message.content
+    print(result, end="")
+    return result
 
+
+def process_stream_response(responses):
+    result = ''
+    for response in responses:
+        for choice in response.choices:
+            if choice.finish_reason != "null":
+                content = choice.delta.get("content")
+                if content is None:
+                    pass
+                else:
+                    print(choice.delta.content, end="")
+    return result
+
+
+def ask_gpt(msg):
     try:
         response = openai.ChatCompletion.create(
-            model=MODEL,
+            model=CONFIG["model"],
+            stream=CONFIG["is_stream"],
             messages=msg,
             # top_p=0.05
         )
     except OpenAIError as e:
         print(e)
         return "null"
-
-    result = ''
-    for choice in response.choices:
-        result += choice.message.content
-    return result
+    if CONFIG["is_stream"]:
+        return process_stream_response(response)
+    else:
+        return process_response(response)
 
 
 def save_conversation(c):
@@ -39,25 +58,27 @@ def save_conversation(c):
 
 
 if __name__ == '__main__':
+    with open(CONFIG_PATH, 'r') as f:
+        CONFIG = json.load(f)
+
+    openai.api_key = CONFIG["api_key"]
     print(WELCOME_MSG)
     conversation = []
-
-    with open(CONFIG_PATH, 'r') as f:
-        config = json.load(f)
-        api_key = config['api_key']
 
     while True:
         line = input(">")
         if line == "":
             continue
         elif line == "clear":
-            save_conversation(conversation)
+            if CONFIG["enable_conversation_log"]:
+                save_conversation(conversation)
             conversation = []
             os.system('cls' if os.name == 'nt' else 'clear')
             print(WELCOME_MSG)
             continue
         elif line == "q":
-            save_conversation(conversation)
+            if CONFIG["enable_conversation_log"]:
+                save_conversation(conversation)
             break
         elif line == "m":
             print("[Multi-line input enabled. A new line only including ~~~ for end of input]")
@@ -70,7 +91,7 @@ if __name__ == '__main__':
                 line += i + "\n"
         conversation.append({"role": "user", "content": line})
 
-        resp = ask(api_key, conversation)
+        resp = ask_gpt(conversation)
         resp = resp.lstrip('\n')  # remove any \n before the actual reply
         conversation.append({"role": "assistant", "content": resp})
-        print(resp)
+        print()

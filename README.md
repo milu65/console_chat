@@ -23,7 +23,10 @@ Create file config.json in the current directory.
 #### Template: config.json
 ```json
 {
-  "api_key": "00000000000000000000000000000000000000000000000"
+  "api_key": "00000000000000000000000000000000000000000000000",
+  "model": "gpt-3.5-turbo",
+  "is_stream": true,
+  "enable_conversation_log": true
 }
 ```
 
