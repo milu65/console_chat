@@ -6,7 +6,7 @@ import json
 from openai import OpenAIError
 
 CONFIG = []
-WELCOME_MSG = "[New Conversation] Using OpenAI Chat API."
+WELCOME_MSG = "[New Conversation] Using OpenAI API. Model: "
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONVERSATION_LOG_PATH = CURRENT_DIR + '/conversation_log.json'
@@ -14,6 +14,7 @@ CONFIG_PATH = CURRENT_DIR + '/config.json'
 
 
 def process_response(response):
+    print("["+response.model+"]: ", end="")
     result = ''
     for choice in response.choices:
         result += choice.message.content
@@ -25,12 +26,12 @@ def process_stream_response(responses):
     result = ''
     for response in responses:
         for choice in response.choices:
-            if choice.finish_reason != "null":
+            if choice.finish_reason is None:
                 content = choice.delta.get("content")
                 if content is None:
-                    pass
+                    print("["+response.model+"]: ", end="", flush=True)
                 else:
-                    print(choice.delta.content, end="", flush=True)
+                    print(content, end="", flush=True)
     return result
 
 
@@ -62,7 +63,7 @@ if __name__ == '__main__':
         CONFIG = json.load(f)
 
     openai.api_key = CONFIG["api_key"]
-    print(WELCOME_MSG)
+    print(WELCOME_MSG+CONFIG["model"])
     conversation = []
 
     while True:
@@ -74,7 +75,7 @@ if __name__ == '__main__':
                 save_conversation(conversation)
             conversation = []
             os.system('cls' if os.name == 'nt' else 'clear')
-            print(WELCOME_MSG)
+            print(WELCOME_MSG + CONFIG["model"])
             continue
         elif line == "q":
             if CONFIG["enable_conversation_log"]:
