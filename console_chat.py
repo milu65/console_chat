@@ -9,7 +9,7 @@ CONFIG = []
 WELCOME_MSG = "[New Conversation] Using OpenAI API. Model: "
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-CONVERSATION_LOG_PATH = CURRENT_DIR + '/conversation_log.json'
+CONVERSATION_LOG_PATH = CURRENT_DIR + '/conversation_log_utf8.json'
 CONFIG_PATH = CURRENT_DIR + '/config.json'
 
 
@@ -24,14 +24,20 @@ def process_response(response):
 
 def process_stream_response(responses):
     result = ''
-    for response in responses:
-        for choice in response.choices:
-            if choice.finish_reason is None:
-                content = choice.delta.get("content")
-                if content is None:
-                    print("["+response.model+"]: ", end="", flush=True)
-                else:
-                    print(content, end="", flush=True)
+    try:
+        for response in responses:
+            for choice in response.choices:
+                if choice.finish_reason is None:
+                    content = choice.delta.get("content")
+                    if content is None:
+                        print("["+response.model+"]: ", end="", flush=True)
+                    else:
+                        print(content, end="", flush=True)
+    except KeyboardInterrupt:
+        message = "[KeyboardInterrupt]"
+        print(message, end="")
+    finally:
+        responses.close()
     return result
 
 
@@ -46,6 +52,10 @@ def ask_gpt(msg):
     except OpenAIError as e:
         print(e)
         return "null"
+    except KeyboardInterrupt:
+        message = "[KeyboardInterrupt]"
+        print(message, end="")
+        return ""
     if CONFIG["is_stream"]:
         return process_stream_response(response)
     else:
@@ -53,9 +63,11 @@ def ask_gpt(msg):
 
 
 def save_conversation(c):
+    if len(c) == 0:
+        return
+    c.insert(0, {"timestamp": int(time.time())})
     with open(CONVERSATION_LOG_PATH, encoding="utf-8", mode='a') as file:
-        c.insert(0, {"timestamp": int(time.time())})
-        file.write("\n," + json.dumps(c))
+        file.write("\n," + json.dumps(c, ensure_ascii=False))
 
 
 if __name__ == '__main__':
