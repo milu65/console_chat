@@ -33,9 +33,17 @@ Create file config.json in the current directory.
 ### Usage
 Run the program:  
 ```
-python console_chat.py 
+python console_chat.py [option]
 ```
-The program will print a welcome message, and you can start chatting by entering your message and pressing Enter.  
-To clear the chat history, enter "clear". (history saved to file)  
-To quit the application, enter "q". (history saved to file)  
-Multi-line input, enter "m".
+The following options are available:
+- history: prints the file path where the conversation log is saved and exits.
+- gpt3: specifies the GPT model to be used as "gpt-3.5-turbo". If not specified, the default model specified in the config file will be used.
+- gpt4: specifies the GPT model to be used as "gpt-4". If not specified, the default model specified in the config file will be used.
+
+When the program is run, it will prompt the user for input. To exit the chatbot, the user can type "q" and press enter. To clear the conversation history, the user can type "clear" and press enter.
+
+If the user types "m" and presses enter, the chatbot will switch to multi-line input mode. In this mode, the user can input multiple lines of text. To end multi-line input mode, the user should type "~" on a new line and press enter.
+
+The conversation log is saved in a JSON file specified in the config file. If conversation logging is enabled, the log will be saved when the user types "q" or "clear".
+
+Note: The console_chat requires an OpenAI API key to function. The API key should be stored in the config file specified in the script.

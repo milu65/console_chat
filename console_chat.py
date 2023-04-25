@@ -1,3 +1,4 @@
+import sys
 import time
 
 import openai
@@ -5,7 +6,10 @@ import os
 import json
 from openai import OpenAIError
 
+import config_field_name_constants as CONFIG_FIELD
+
 CONFIG = []
+SPECIFIED_MODEL_SERIES = None
 WELCOME_MSG = "[New Conversation] Using OpenAI API. Model: "
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +18,7 @@ CONFIG_PATH = CURRENT_DIR + '/config.json'
 
 
 def process_response(response):
-    print("["+response.model+"]: ", end="")
+    print("[" + response.model + "]: ", end="")
     result = ''
     for choice in response.choices:
         result += choice.message.content
@@ -30,7 +34,7 @@ def process_stream_response(responses):
                 if choice.finish_reason is None:
                     content = choice.delta.get("content")
                     if content is None:
-                        print("["+response.model+"]: ", end="", flush=True)
+                        print("[" + response.model + "]: ", end="", flush=True)
                     else:
                         print(content, end="", flush=True)
     except KeyboardInterrupt:
@@ -44,19 +48,19 @@ def process_stream_response(responses):
 def ask_gpt(msg):
     try:
         response = openai.ChatCompletion.create(
-            model=CONFIG["model"],
-            stream=CONFIG["is_stream"],
+            model=CONFIG[CONFIG_FIELD.MODEL],
+            stream=CONFIG[CONFIG_FIELD.IS_STREAM],
             messages=msg,
             # top_p=0.05
         )
     except OpenAIError as e:
         print(e)
-        return "null"
+        return "OpenAIError"
     except KeyboardInterrupt:
         message = "[KeyboardInterrupt]"
         print(message, end="")
         return ""
-    if CONFIG["is_stream"]:
+    if CONFIG[CONFIG_FIELD.IS_STREAM]:
         return process_stream_response(response)
     else:
         return process_response(response)
@@ -70,12 +74,16 @@ def save_conversation(c):
         file.write("\n," + json.dumps(c, ensure_ascii=False))
 
 
-if __name__ == '__main__':
+def chat():
+    global CONFIG, SPECIFIED_MODEL_SERIES
     with open(CONFIG_PATH, 'r') as f:
         CONFIG = json.load(f)
 
-    openai.api_key = CONFIG["api_key"]
-    print(WELCOME_MSG+CONFIG["model"])
+    if SPECIFIED_MODEL_SERIES is not None:
+        CONFIG[CONFIG_FIELD.MODEL] = SPECIFIED_MODEL_SERIES
+
+    openai.api_key = CONFIG[CONFIG_FIELD.API_KEY]
+    print(WELCOME_MSG + CONFIG[CONFIG_FIELD.MODEL])
     conversation = []
 
     while True:
@@ -87,10 +95,10 @@ if __name__ == '__main__':
                 save_conversation(conversation)
             conversation = []
             os.system('cls' if os.name == 'nt' else 'clear')
-            print(WELCOME_MSG + CONFIG["model"])
+            print(WELCOME_MSG + CONFIG[CONFIG_FIELD.MODEL])
             continue
         elif line == "q":
-            if CONFIG["enable_conversation_log"]:
+            if CONFIG[CONFIG_FIELD.ENABLE_CONVERSATION_LOG]:
                 save_conversation(conversation)
             break
         elif line == "m":
@@ -108,3 +116,16 @@ if __name__ == '__main__':
         resp = resp.lstrip('\n')  # remove any \n before the actual reply
         conversation.append({"role": "assistant", "content": resp})
         print()
+
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1]
+        if cmd == "history":
+            print(CONVERSATION_LOG_PATH)
+            exit()
+        elif cmd.lower() == "gpt3":
+            SPECIFIED_MODEL_SERIES = "gpt-3.5-turbo"
+        elif cmd.lower() == "gpt4":
+            SPECIFIED_MODEL_SERIES = "gpt-4"
+    chat()
