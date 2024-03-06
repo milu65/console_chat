@@ -2,3 +2,4 @@
 config.json
 conversation_log.json
 conversation_log_utf8.json
+__pycache__/

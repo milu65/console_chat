@@ -1,7 +1,7 @@
 import sys
 import time
 
-import openai
+from openai import OpenAI
 import os
 import json
 from openai import OpenAIError
@@ -32,7 +32,7 @@ def process_stream_response(responses):
         for response in responses:
             for choice in response.choices:
                 if choice.finish_reason is None:
-                    content = choice.delta.get("content")
+                    content = choice.delta.content
                     if content is None:
                         print("[" + response.model + "]: ", end="", flush=True)
                     else:
@@ -47,7 +47,7 @@ def process_stream_response(responses):
 
 def ask_gpt(msg):
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model=CONFIG[CONFIG_FIELD.MODEL],
             stream=CONFIG[CONFIG_FIELD.IS_STREAM],
             messages=msg,
@@ -74,15 +74,19 @@ def save_conversation(c):
         file.write("\n," + json.dumps(c, ensure_ascii=False))
 
 
-def chat():
+def init():
     global CONFIG, SPECIFIED_MODEL_SERIES
+    global client
     with open(CONFIG_PATH, 'r') as f:
         CONFIG = json.load(f)
 
     if SPECIFIED_MODEL_SERIES is not None:
         CONFIG[CONFIG_FIELD.MODEL] = SPECIFIED_MODEL_SERIES
 
-    openai.api_key = CONFIG[CONFIG_FIELD.API_KEY]
+    client = OpenAI(api_key=CONFIG[CONFIG_FIELD.API_KEY])
+
+
+def chat():
     print(WELCOME_MSG + CONFIG[CONFIG_FIELD.MODEL])
     conversation = []
 
@@ -128,4 +132,5 @@ if __name__ == '__main__':
             SPECIFIED_MODEL_SERIES = "gpt-3.5-turbo"
         elif cmd.lower() == "gpt4":
             SPECIFIED_MODEL_SERIES = "gpt-4"
+    init()
     chat()

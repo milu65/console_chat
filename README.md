@@ -24,7 +24,7 @@ Create file config.json in the current directory.
 ```json
 {
   "api_key": "00000000000000000000000000000000000000000000000",
-  "model": "gpt-3.5-turbo",
+  "model": "gpt-4",
   "is_stream": true,
   "enable_conversation_log": true
 }
